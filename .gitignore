@@ -1,0 +1,11 @@
+*.zip
+target/
+out/
+.DS_Store
+*.classpath
+*.project
+*.settings
+.security/
+*.war
+*.iml
+.idea
