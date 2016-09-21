@@ -10,6 +10,7 @@ Services
 --------
 There are several individual microservices that make up this app:
 
+1. JBoss BRMS - for editing pricing and shipping rules. 
 1. SSO Service - for protecting per-customer RESTful services (such as the cart microservice), using [Red Hat SSO](https://access.redhat.com/documentation/en/red-hat-single-sign-on/)
 1. Catalog Service - Java EE application running on [JBoss EAP 7](https://access.redhat.com/products/red-hat-jboss-enterprise-application-platform/), serves products and prices for retail products
 1. Cart Service - Java EE application running on [JBoss EAP 7](https://access.redhat.com/products/red-hat-jboss-enterprise-application-platform/), manages shopping cart for each customer
@@ -26,6 +27,7 @@ Notice the UI pods only expose an HTTP endpoint - when users access the UI servi
 
 Demo Credentials and other identifiers
 --------------------------------------
+1. JBoss BRMS: username `jhf` password `jbossbrms1!`
 1. SSO Realm Name: `myrealm`
 1. SSO / JBoss security role name: `user`
 1. SSO Admin (used when logging into SSO Admin Console): username `admin` password: `admin`
@@ -179,32 +181,31 @@ You should get a JSON object listing the item ID (foo) and a real availability (
     {"itemId":"1234","availability":"36 available at Raleign store!"}
 ```
 
-Deploy Cart Service using the OpenShift `oc` CLI
-------------------------------------------------
-This service relies on the standard xPaaS image for JBoss EAP 7. No route is created to this service, as it is only accessible from inside the kubernetes cluster.
+Deploy BRMS-based Cart Service using the OpenShift `oc` CLI
+-----------------------------------------------------------
+This service relies deploys a full JBoss BRMS solution with a RESTful frontend for shopping cart services. It is a Docker-based build process outlined below:
 
-1. Create and deploy service: 
+1. Download the files described in the [cart-service/installs/](/cart-service/installs/) directory for JBoss BRMS and EAP.
+1. Create a new binary build in openshift:
 ```
-    oc process -f cart-service.json | oc create -f -
+    $ cd cart-service
+    $ mvn clean package
+    $ oc new-build --binary --name=cart-service -l application=cart-service
+    $ oc start-build cart-service --from-dir=. --follow
+    $ oc new-app cart-service -l application=cart-service,hystrix.enabled=true
+    $ oc expose service cart-service
 ```
-If you have created a [local Maven mirror](https://blog.openshift.com/improving-build-time-java-builds-openshift/) to speed up your builds, specify it with `MAVEN_MIRROR_URL` in the above command. 
-
-1. Wait for it to complete (this step may take a while as it downloads all Maven dependencies during the build). Follow the logs using
-```
-    oc logs -f bc/cart-service
-``` 
-
-To confirm this service is reachable from the API Gateway, determine the name of the pod running the API Gateway and access the service from the API Gateway pod:
+1. The Docker build might take a few minutes to complete. Once completed, to confirm this service is reachable from the API Gateway, determine the name of the pod running the API Gateway and access the service from the API Gateway pod:
 ```
     $ oc get pods
     $ oc rsh [API-GATEWAY-POD-NAME] curl http://cart-service:8080/api/cart/FOO
 ```
-
 You should get an empty cart JSON object e.g.:
-
 ```
 {"cartItemTotal":0.0,"cartItemPromoSavings":0.0,"shippingTotal":0.0,"shippingPromoSavings":0.0,"cartTotal":0.0,"shoppingCartItemList":[]}
 ```
+1. The BRMS console is deployed under the `business-central` context. To access the BRMS console, you can click on the `cart-service` route from the OpenShift web console and then append `/business-central` to the UI, or visit `http://cart-service-PROJECT.DOMAIN/business-central` and login with `jhf`/`jbossbrms1!`
+You can then update the rules (for example, the pricing table, or the shipping amounts) and re-deploy the rules and observe the effects in the UI once deployed.
 
 Deploy the UI Service using the OpenShift `oc` CLI
 --------------------------------------------------
