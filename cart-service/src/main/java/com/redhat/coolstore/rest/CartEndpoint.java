@@ -21,7 +21,7 @@ import com.redhat.coolstore.service.ShoppingCartService;
 public class CartEndpoint implements Serializable {
 
     /**
-     *
+     * test
      */
     private static final long serialVersionUID = -7227732980791688773L;
 
