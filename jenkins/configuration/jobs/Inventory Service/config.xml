@@ -25,7 +25,7 @@
       <configVersion>2</configVersion>
       <userRemoteConfigs>
         <hudson.plugins.git.UserRemoteConfig>
-          <url>https://github.com/jamesfalkner/coolstore-microservice</url>
+          <url>https://github.com/jamesfalkner/coolstore-microservice-brms</url>
         </hudson.plugins.git.UserRemoteConfig>
       </userRemoteConfigs>
       <branches>

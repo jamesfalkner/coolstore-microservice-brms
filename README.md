@@ -189,13 +189,14 @@ This service relies deploys a full JBoss BRMS solution with a RESTful frontend f
 1. Create a new binary build in openshift:
 ```
     $ cd cart-service
+    $ mvn install:install-file -Dfile=support/libs/coolstore-2.0.0.jar -DgroupId=com.redhat -DartifactId=coolstore -Dversion=2.0.0 -Dpackaging=jar
     $ mvn clean package
     $ oc new-build --binary --name=cart-service -l application=cart-service
     $ oc start-build cart-service --from-dir=. --follow
     $ oc new-app cart-service -l application=cart-service,hystrix.enabled=true
     $ oc expose service cart-service
 ```
-1. The Docker build might take a few minutes to complete. Once completed, to confirm this service is reachable from the API Gateway, determine the name of the pod running the API Gateway and access the service from the API Gateway pod:
+1. The `oc start-build` command will take a few minutes to complete. Once all of these commands are done, to confirm this service is reachable from the API Gateway, determine the name of the pod running the API Gateway and access the service from the API Gateway pod:
 ```
     $ oc get pods
     $ oc rsh [API-GATEWAY-POD-NAME] curl http://cart-service:8080/api/cart/FOO
